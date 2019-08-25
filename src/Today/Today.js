@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './Today.css';
-import axios from 'axios';
+import socketIOClient from 'socket.io-client';
 
 const Today = () => {
   const [prices, setPrices] = useState({
@@ -10,18 +10,15 @@ const Today = () => {
   });
 
   useEffect(() => {
-    axios.get('https://min-api.cryptocompare.com/data/pricemulti?fsyms=BTC,ETH,LTC&tsyms=USD')
-      .then(response => {
-        setPrices({
-          btcprice: response.data.BTC.USD,
-          ethprice: response.data.ETH.USD,
-          ltcprice: response.data.LTC.USD
-        });
+    const socket = socketIOClient('http://127.0.0.1:4001');
+    socket.on("coin-Price", data => {
+      setPrices({
+        btcprice: data.BTC.USD,
+        ethprice: data.ETH.USD,
+        ltcprice: data.LTC.USD
       })
-      .catch(error => {
-        console.log(error)
-      });
-  });
+    });
+  }, []);
 
   return (
     <div className="today--section container">

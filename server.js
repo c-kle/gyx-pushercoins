@@ -1,18 +1,10 @@
-// server.js
 const express = require('express');
-const path = require('path');
 const bodyParser = require('body-parser');
-const app = express();
-const Pusher = require('pusher');
+const http = require('http');
+const socketIo = require('socket.io');
+const axios = require('axios');
 
-//initialize Pusher with your appId, key, secret and cluster
-const pusher = new Pusher({
-  appId: '849280',
-  key: '2cef6fdd6e9d137d550e',
-  secret: '0b1b46ea72b5937cb6a9',
-  cluster: 'eu',
-  encrypted: true
-})
+const app = express();
 
 // Body parser middleware
 app.use(bodyParser.json())
@@ -34,21 +26,37 @@ app.use((req, res, next) => {
 })
 
 // Set port to be used by Node.js
-app.set('port', (5000))
+app.set('port', (4001))
 
 app.get('/', (req, res) => {
   res.send('Welcome')
 })
 
-// API route in which the price information will be sent to from the clientside
-app.post('/prices/new', (req, res) => {
-  // Trigger the 'prices' event to the 'coin-prices' channel
-  pusher.trigger('coin-prices', 'prices', {
-    prices: req.body.prices
-  });
-  res.sendStatus(200);
-})
+// app.listen(app.get('port'), () => {
+//   console.log('Node app is running on port', app.get('port'))
+// })
 
-app.listen(app.get('port'), () => {
-  console.log('Node app is running on port', app.get('port'))
-})
+
+const server = http.createServer(app);
+const io = socketIo(server);
+
+const getApiAndEmit = socket => {
+  axios.get(
+    'https://min-api.cryptocompare.com/data/pricemulti?fsyms=BTC,ETH,LTC&tsyms=USD'
+  ).then(response => {
+    socket.emit('coin-Price', response.data);
+  });
+};
+
+let interval;
+
+io.on('connection', socket => {
+  console.log('New client connected');
+  if (interval) {
+    clearInterval(interval);
+  }
+  interval = setInterval(() => getApiAndEmit(socket), 10000);
+  socket.on('disconnect', () => console.log('Client disconnected'));
+});
+
+server.listen(app.get('port'), () => console.log(`Listening on port ${app.get('port')}`));
