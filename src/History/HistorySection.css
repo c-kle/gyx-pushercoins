@@ -1,0 +1,21 @@
+.history--section__box__inner {
+    display: block;
+    padding: 20px;
+    width: 100%;
+    border-bottom: 1px dashed #7D95B6;
+}
+.history--section__box__inner:nth-last-child(1) {
+    border-bottom: none;
+}
+.history--section__box__inner h4 {
+    color: #0667D0;
+    margin-bottom: 10px;
+}
+.history--section__box__inner p {
+    text-align: center;
+}
+@media (max-width: 480px) {
+    .history--section__box__inner h4 {
+        text-align: center;
+    }
+}
